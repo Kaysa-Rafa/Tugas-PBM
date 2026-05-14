@@ -1,178 +1,147 @@
+// lib/pages/submit_page.dart
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
 class SubmitPage extends StatefulWidget {
-  const SubmitPage({super.key});
   @override
-  State<SubmitPage> createState() => _SubmitPageState();
+  _SubmitPageState createState() => _SubmitPageState();
 }
 
 class _SubmitPageState extends State<SubmitPage> {
-  final _nameCtrl = TextEditingController(text: 'Produk Final Futuristik');
-  final _priceCtrl = TextEditingController(text: '99999');
-  final _descCtrl = TextEditingController(text: 'Dikirim dari perangkat quanta');
-  final _githubCtrl = TextEditingController(
-    text: 'https://github.com/Kaysa-Rafa/Tugas-PBM', 
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _descController = TextEditingController();
+  // Inisialisasi controller dengan nilai default langsung
+  final _repoController = TextEditingController(
+    text: 'https://github.com/Kaysa-Rafa/Tugas-PBM',
   );
-  final _apiService = ApiService();
+  final ApiService _apiService = ApiService();
   bool _isSubmitting = false;
 
+  // Regex untuk validasi URL GitHub
+  final _githubUrlRegex = RegExp(
+    r'^https?:\/\/github\.com\/[a-zA-Z0-9\-_]+\/[a-zA-Z0-9\-_\.]+$',
+  );
+
   Future<void> _submit() async {
-    final price = int.tryParse(_priceCtrl.text);
-    if (price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Harga harus angka'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
-    if (_githubCtrl.text.isEmpty || !_githubCtrl.text.startsWith('http')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('URL GitHub tidak valid'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
     try {
-      await _apiService.submitAssignment(
-        name: _nameCtrl.text,
+      final price = double.tryParse(
+            _priceController.text.replaceAll(',', '.'),
+          ) ??
+          0;
+      await _apiService.submitTask(
+        name: _nameController.text.trim(),
         price: price,
-        description: _descCtrl.text,
-        githubUrl: _githubCtrl.text.trim(),
+        description: _descController.text.trim(),
+        githubUrl: _repoController.text.trim(),
       );
-      
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Tugas terkirim ke server utama'),
-            backgroundColor: Colors.greenAccent),
-      );
-      Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tugas berhasil disubmit!')),
+        );
+        Navigator.pop(context);
+      }
     } catch (e) {
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Submit gagal: ${e.toString()}'),
-            backgroundColor: Colors.redAccent),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _descController.dispose();
+    _repoController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SUBMIT TUGAS', style: TextStyle(letterSpacing: 2)),
-        backgroundColor: const Color(0xFF0A0E21),
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.topLeft,
-            radius: 1.5,
-            colors: [Color(0xFF1D1F33), Color(0xFF0A0E21)],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1D1F33).withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: const Color(0xFF00E5FF).withOpacity(0.6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00E5FF).withOpacity(0.3),
-                    blurRadius: 25,
-                    spreadRadius: 1,
-                  ),
-                ],
+      appBar: AppBar(title: Text('Submit Tugas')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: _inputDecoration('Nama Produk'),
+                validator: (v) =>
+                    v!.trim().isEmpty ? 'Nama produk wajib diisi' : null,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(Icons.rocket, size: 48, color: Color(0xFF00E5FF)),
-                  const SizedBox(height: 16),
-                  Text(
-                    'FINALISASI MISI',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 20,
-                        color: const Color(0xFF00E5FF).withOpacity(0.9),
-                        letterSpacing: 2),
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _nameCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'Nama Produk',
-                        prefixIcon: Icon(Icons.label, color: Color(0xFF00E5FF))),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _priceCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                        labelText: 'Harga',
-                        prefixIcon: Icon(Icons.attach_money, color: Color(0xFF00E5FF))),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _descCtrl,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                        labelText: 'Deskripsi',
-                        prefixIcon: Icon(Icons.text_snippet, color: Color(0xFF00E5FF))),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _githubCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'URL Repository',
-                        prefixIcon: Icon(Icons.link, color: Color(0xFF00E5FF))),
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00E5FF),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                        shadowColor: const Color(0xFF00E5FF).withOpacity(0.8),
-                        elevation: 10,
-                      ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.black))
-                          : const Text('KIRIM TUGAS',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black)),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: _inputDecoration('Harga'),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Harga wajib diisi';
+                  final cleaned = v.replaceAll(',', '.');
+                  final parsed = double.tryParse(cleaned);
+                  if (parsed == null) return 'Masukkan angka yang valid';
+                  if (parsed <= 0) return 'Harga harus lebih dari 0';
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _descController,
+                decoration: _inputDecoration('Deskripsi Produk'),
+                maxLines: 3,
+                validator: (v) =>
+                    v!.trim().isEmpty ? 'Deskripsi wajib diisi' : null,
+              ),
+              SizedBox(height: 16),
+              // Field URL GitHub dengan nilai default
+              TextFormField(
+                controller: _repoController,
+                decoration: _inputDecoration('URL Repository GitHub'),
+                keyboardType: TextInputType.url,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
+                  if (!_githubUrlRegex.hasMatch(v.trim())) {
+                    return 'Masukkan URL GitHub yang valid\ncontoh: https://github.com/user/repo';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 24),
+              _isSubmitting
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _submit,
+                      child: Text('SUBMIT'),
                     ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Color(0xFF00E5FF)),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF00E5FF).withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF00E5FF), width: 2),
+        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

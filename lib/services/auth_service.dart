@@ -1,17 +1,30 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  final _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String _tokenKey = 'auth_token';
 
   Future<void> saveToken(String token) async {
-    await _storage.write(key: 'bearer_token', value: token);
+    try {
+      await _storage.write(key: _tokenKey, value: token);
+    } catch (e) {
+      throw Exception('Gagal menyimpan token: $e');
+    }
   }
 
   Future<String?> getToken() async {
-    return await _storage.read(key: 'bearer_token');
+    try {
+      return await _storage.read(key: _tokenKey);
+    } catch (e) {
+      throw Exception('Gagal membaca token: $e');
+    }
   }
 
   Future<void> deleteToken() async {
-    await _storage.delete(key: 'bearer_token');
+    try {
+      await _storage.delete(key: _tokenKey);
+    } catch (e) {
+      throw Exception('Gagal menghapus token: $e');
+    }
   }
 }

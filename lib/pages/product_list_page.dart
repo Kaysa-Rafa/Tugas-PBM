@@ -1,17 +1,81 @@
+// lib/pages/product_list_page.dart
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 
 class ProductListPage extends StatefulWidget {
-  const ProductListPage({super.key});
   @override
-  State<ProductListPage> createState() => _ProductListPageState();
+  _ProductListPageState createState() => _ProductListPageState();
 }
 
 class _ProductListPageState extends State<ProductListPage> {
   final ApiService _apiService = ApiService();
   List<Product> _products = [];
-  bool _isLoading = false;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final products = await _apiService.getProducts();
+      if (mounted) {
+        setState(() {
+          _products = products;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteProduct(Product product) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Color(0xFF1D1F33),
+        title: Text('Konfirmasi', style: TextStyle(color: Color(0xFF00E5FF))),
+        content: Text('Hapus produk "${product.name}"?',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Batal', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _apiService.deleteProduct(product.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Produk berhasil dihapus')),
+        );
+        _loadProducts(); // muat ulang daftar
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -19,170 +83,136 @@ class _ProductListPageState extends State<ProductListPage> {
     _loadProducts();
   }
 
-  Future<void> _loadProducts() async {
-    setState(() => _isLoading = true);
-    try {
-      final products = await _apiService.getProducts();
-      if (!mounted) return;
-      setState(() => _products = products);
-    } catch (e) {
-      if (!mounted) return;
-      _showError(e.toString());
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _deleteProduct(int id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1F33),
-        title: const Text('Hapus Produk', style: TextStyle(color: Color(0xFF00E5FF))),
-        content: const Text('Data akan disembunyikan.', style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _apiService.deleteProduct(id);
-        if (!mounted) return;
-        _loadProducts();
-      } catch (e) {
-        if (!mounted) return;
-        _showError('Gagal menghapus: $e');
-      }
-    }
-  }
-
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('KATALOG', style: TextStyle(letterSpacing: 3)),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF0A0E21),
-        elevation: 0,
+        title: Text('Katalog Produk'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.cloud_done_outlined, color: Color(0xFF00E5FF)),
+            icon: Icon(Icons.refresh, color: Color(0xFF00E5FF)),
+            onPressed: _loadProducts,
+          ),
+          IconButton(
+            icon: Icon(Icons.upload_file, color: Color(0xFF00E5FF)),
             onPressed: () => Navigator.pushNamed(context, '/submit'),
-            tooltip: 'Submit Tugas',
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF00E5FF),
-        child: const Icon(Icons.add, color: Colors.black),
+        backgroundColor: Color(0xFF00E5FF),
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-product');
-          _loadProducts();
+          _loadProducts(); // refresh setelah menambah produk
+        },
+        child: Icon(Icons.add, color: Colors.black),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Terjadi kesalahan', style: TextStyle(color: Colors.redAccent)),
+            SizedBox(height: 8),
+            Text(_errorMessage!, style: TextStyle(color: Colors.white54)),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProducts,
+              child: Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_products.isEmpty) {
+      return Center(
+        child: Text('Belum ada produk', style: TextStyle(color: Colors.white54)),
+      );
+    }
+
+    return RefreshIndicator(
+      color: Color(0xFF00E5FF),
+      onRefresh: _loadProducts,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _products.length,
+        itemBuilder: (context, index) {
+          final product = _products[index];
+          return _buildProductCard(product);
         },
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF)))
-          : _products.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.inventory_2_outlined, size: 64, color: Colors.white.withOpacity(0.3)),
-                      const SizedBox(height: 16),
-                      Text('Belum ada produk', style: TextStyle(color: Colors.white.withOpacity(0.5))),
-                    ],
+    );
+  }
+
+  Widget _buildProductCard(Product p) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      color: Color(0xFF1D1F33),
+      elevation: 4,
+      shadowColor: Color(0xFF00E5FF).withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    p.name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00E5FF),
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: _products.length,
-                  itemBuilder: (ctx, i) {
-                    final p = _products[i];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1D1F33),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: const Color(0xFF00E5FF).withOpacity(0.4), width: 1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF00E5FF).withOpacity(0.2),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [Color(0xFF00E5FF), Color(0xFF007BFF)],
-                                ),
-                              ),
-                              child: const Icon(Icons.memory, color: Colors.black, size: 28),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(p.name,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                  const SizedBox(height: 4),
-                                  Text('Rp ${p.price}',
-                                      style: const TextStyle(
-                                          color: Color(0xFF00E5FF),
-                                          fontWeight: FontWeight.w600)),
-                                  if (p.description.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        p.description,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            color: Colors.white.withOpacity(0.6),
-                                            fontSize: 12),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
-                              onPressed: () => _deleteProduct(p.id!),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
                 ),
+                Text(
+                  'Rp ${p.price.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            // Perbaikan: cek null dengan aman menggunakan ?.
+            if (p.description?.isNotEmpty == true) ...[
+              SizedBox(height: 12),
+              Text(
+                p.description!,
+                style: TextStyle(color: Colors.white70),
+              ),
+            ],
+            SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: Colors.redAccent),
+                  onPressed: () => _deleteProduct(p),
+                  tooltip: 'Hapus produk',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

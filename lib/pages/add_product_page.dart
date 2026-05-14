@@ -3,53 +3,47 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  _AddProductPageState createState() => _AddProductPageState();
 }
 
 class _AddProductPageState extends State<AddProductPage> {
-  final _nameCtrl = TextEditingController();
-  final _priceCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
-  final _apiService = ApiService();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _descController = TextEditingController();
+  final ApiService _apiService = ApiService();
   bool _isSaving = false;
 
-Future<void> _save() async {
-    if (_nameCtrl.text.isEmpty || _priceCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Nama dan harga wajib diisi'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
-    final price = int.tryParse(_priceCtrl.text);
-    if (price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Harga harus angka'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
+  Future<void> _addProduct() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSaving = true);
     try {
-      await _apiService.createProduct(Product(
-        name: _nameCtrl.text,
+      final price = double.tryParse(_priceController.text.replaceAll(',', '.')) ?? 0;
+      final product = Product(
+        id: 0,
+        name: _nameController.text.trim(),
         price: price,
-        description: _descCtrl.text,
-      ));
-      
-      if (!mounted) return; // FIX
-      Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return; // FIX
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Gagal: ${e.toString()}'),
-            backgroundColor: Colors.redAccent),
+        description: _descController.text.trim(),
       );
+      await _apiService.addProduct(product);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Produk berhasil ditambahkan')),
+        );
+        // Perbaikan: reset form
+        _formKey.currentState?.reset();
+        _nameController.clear();
+        _priceController.clear();
+        _descController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -58,81 +52,73 @@ Future<void> _save() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('TAMBAH PRODUK'),
-        backgroundColor: const Color(0xFF0A0E21),
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0A0E21), Color(0xFF1D1F33)],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      appBar: AppBar(title: Text('Tambah Produk')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Produk',
-                  prefixIcon: Icon(Icons.label, color: Color(0xFF00E5FF)),
-                ),
+              TextFormField(
+                controller: _nameController,
+                decoration: _inputDecoration('Nama Produk'),
+                validator: (v) => v!.trim().isEmpty ? 'Nama wajib diisi' : null,
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _priceCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Harga (Rp)',
-                  prefixIcon: Icon(Icons.attach_money, color: Color(0xFF00E5FF)),
-                ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: _inputDecoration('Harga'),
+                // Perbaikan: validasi harga desimal yang lebih fleksibel
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Harga wajib diisi';
+                  final cleaned = v.replaceAll(',', '.');
+                  final parsed = double.tryParse(cleaned);
+                  if (parsed == null) return 'Masukkan angka yang valid';
+                  if (parsed <= 0) return 'Harga harus lebih dari 0';
+                  return null;
+                },
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _descCtrl,
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _descController,
+                decoration: _inputDecoration('Deskripsi (opsional)'),
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 50),
-                    child: Icon(Icons.description, color: Color(0xFF00E5FF)),
-                  ),
-                ),
               ),
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E5FF),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    shadowColor: const Color(0xFF00E5FF).withOpacity(0.6),
-                    elevation: 8,
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.black))
-                      : const Text('SIMPAN DRAFT',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black)),
-                ),
-              ),
+              SizedBox(height: 24),
+              _isSaving
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _addProduct,
+                      child: Text('SIMPAN'),
+                    ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Color(0xFF00E5FF)),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF00E5FF).withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Color(0xFF00E5FF), width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _descController.dispose();
+    super.dispose();
   }
 }

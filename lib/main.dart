@@ -5,55 +5,58 @@ import 'pages/product_list_page.dart';
 import 'pages/add_product_page.dart';
 import 'pages/submit_page.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Perbaikan: inisialisasi binding
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final textTheme = GoogleFonts.orbitronTextTheme(
+      ThemeData.dark().textTheme,
+    );
+
     return MaterialApp(
-      title: 'Futuristik PBM',
+      title: 'Tugas PBM',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0E21),
-        primaryColor: const Color(0xFF00E5FF),
-        fontFamily: GoogleFonts.orbitron().fontFamily,
-        textTheme: GoogleFonts.orbitronTextTheme(ThemeData.dark().textTheme),
+        primaryColor: Color(0xFF00E5FF),
+        scaffoldBackgroundColor: Color(0xFF0A0E21),
+        cardColor: Color(0xFF1D1F33),
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(0xFF1D1F33),
+          titleTextStyle: GoogleFonts.orbitron(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF00E5FF),
+          ),
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00E5FF),
+            backgroundColor: Color(0xFF00E5FF),
             foregroundColor: Colors.black,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFF00E5FF), width: 2),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF1D1F33),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 2),
-          ),
-          labelStyle: const TextStyle(color: Color(0xFF00E5FF)),
         ),
       ),
       initialRoute: '/login',
       routes: {
-        // Ditambahkan const agar tidak ada warning biru
-        '/login': (context) => const LoginPage(),
-        '/products': (context) => const ProductListPage(),
-        '/add-product': (context) => const AddProductPage(),
-        '/submit': (context) => const SubmitPage(),
+        '/login': (context) => LoginPage(),
+        '/products': (context) => ProductListPage(),
+        '/add-product': (context) => AddProductPage(),
+        '/submit': (context) => SubmitPage(),
       },
+      // Perbaikan: rute fallback jika halaman tidak ditemukan
+      onUnknownRoute: (settings) => MaterialPageRoute(
+        builder: (context) => Scaffold(
+          body: Center(child: Text('Halaman tidak ditemukan')),
+        ),
+      ),
     );
   }
 }
