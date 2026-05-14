@@ -34,7 +34,6 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   Future<void> _deleteProduct(int id) async {
-    // KODE YANG DIPERBAIKI (Tidak boleh ada tanda '...')
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -76,7 +75,7 @@ class _ProductListPageState extends State<ProductListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('KATALOG NEON', style: TextStyle(letterSpacing: 3)),
+        title: const Text('KATALOG', style: TextStyle(letterSpacing: 3)),
         centerTitle: true,
         backgroundColor: const Color(0xFF0A0E21),
         elevation: 0,
@@ -93,7 +92,6 @@ class _ProductListPageState extends State<ProductListPage> {
         child: const Icon(Icons.add, color: Colors.black),
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-product');
-          if (!mounted) return;
           _loadProducts();
         },
       ),

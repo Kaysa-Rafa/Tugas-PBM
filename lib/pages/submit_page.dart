@@ -18,7 +18,6 @@ class _SubmitPageState extends State<SubmitPage> {
   bool _isSubmitting = false;
 
   Future<void> _submit() async {
-    // Validasi dikembalikan agar 'price' terbaca
     final price = int.tryParse(_priceCtrl.text);
     if (price == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -41,7 +40,7 @@ class _SubmitPageState extends State<SubmitPage> {
     try {
       await _apiService.submitAssignment(
         name: _nameCtrl.text,
-        price: price, // Sekarang variabel price tidak akan error
+        price: price,
         description: _descCtrl.text,
         githubUrl: _githubCtrl.text.trim(),
       );

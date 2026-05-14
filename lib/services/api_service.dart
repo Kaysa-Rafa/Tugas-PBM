@@ -11,7 +11,6 @@ class ApiService {
   Future<Map<String, String>> _getHeaders() async {
     final token = await _authService.getToken();
     return {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer ${token ?? ''}',
     };
@@ -21,8 +20,8 @@ class ApiService {
     final url = Uri.parse('$baseUrl/api/auth/login');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-      body: jsonEncode({'username': username, 'password': password}),
+      headers: {'Accept': 'application/json'},
+      body: {'username': username, 'password': password},
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -81,7 +80,6 @@ class ApiService {
     }
   }
 
-  // --- BAGIAN YANG DIPERBAIKI (Diubah menjadi tipe data Map Form biasa seperti createProduct) ---
   Future<void> submitAssignment({
     required String name,
     required int price,
@@ -99,7 +97,7 @@ class ApiService {
       },
       body: {
         'name': name,
-        'price': price.toString(), // Pastikan di-cast ke string
+        'price': price.toString(),
         'description': description,
         'github_url': githubUrl,
       },
