@@ -17,19 +17,36 @@ class _SubmitPageState extends State<SubmitPage> {
   final _apiService = ApiService();
   bool _isSubmitting = false;
 
-Future<void> _submit() async {
-    // ... (Validasi form sama persis)
+  Future<void> _submit() async {
+    // Validasi dikembalikan agar 'price' terbaca
+    final price = int.tryParse(_priceCtrl.text);
+    if (price == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Harga harus angka'),
+            backgroundColor: Colors.orangeAccent),
+      );
+      return;
+    }
+    if (_githubCtrl.text.isEmpty || !_githubCtrl.text.startsWith('http')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('URL GitHub tidak valid'),
+            backgroundColor: Colors.orangeAccent),
+      );
+      return;
+    }
 
     setState(() => _isSubmitting = true);
     try {
       await _apiService.submitAssignment(
         name: _nameCtrl.text,
-        price: price!,
+        price: price, // Sekarang variabel price tidak akan error
         description: _descCtrl.text,
         githubUrl: _githubCtrl.text.trim(),
       );
       
-      if (!mounted) return; // FIX
+      if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -38,7 +55,7 @@ Future<void> _submit() async {
       );
       Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return; // FIX
+      if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

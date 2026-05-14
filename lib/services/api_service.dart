@@ -47,22 +47,16 @@ class ApiService {
     }
   }
 
-  // --- BAGIAN YANG DIPERBAIKI ---
   Future<Product> createProduct(Product product) async {
-    // Ambil token secara manual agar kita bisa mengatur header spesifik untuk fungsi ini
     final token = await _authService.getToken();
     final url = Uri.parse('$baseUrl/api/products');
     
     final response = await http.post(
       url,
       headers: {
-        // Kita HAPUS 'Content-Type': 'application/json' untuk request ini
-        // agar dikirim sebagai form-data biasa
         'Accept': 'application/json',
         'Authorization': 'Bearer ${token ?? ''}',
       },
-      // Hapus jsonEncode dan kirim sebagai Map biasa.
-      // Pastikan semua value dikonversi ke String
       body: {
         'name': product.name,
         'price': product.price.toString(),
@@ -77,7 +71,6 @@ class ApiService {
       throw Exception('Gagal menyimpan produk: ${response.body}');
     }
   }
-  // ------------------------------
 
   Future<void> deleteProduct(int id) async {
     final headers = await _getHeaders();
@@ -88,24 +81,30 @@ class ApiService {
     }
   }
 
+  // --- BAGIAN YANG DIPERBAIKI (Diubah menjadi tipe data Map Form biasa seperti createProduct) ---
   Future<void> submitAssignment({
     required String name,
     required int price,
     required String description,
     required String githubUrl,
   }) async {
-    final headers = await _getHeaders();
+    final token = await _authService.getToken();
     final url = Uri.parse('$baseUrl/api/products/submit');
+    
     final response = await http.post(
       url,
-      headers: headers,
-      body: jsonEncode({
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${token ?? ''}',
+      },
+      body: {
         'name': name,
-        'price': price,
+        'price': price.toString(), // Pastikan di-cast ke string
         'description': description,
         'github_url': githubUrl,
-      }),
+      },
     );
+    
     if (response.statusCode != 200) {
       throw Exception('Submit gagal: ${response.body}');
     }

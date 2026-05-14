@@ -48,10 +48,11 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) => LoginPage(),
-        '/products': (context) => ProductListPage(),
-        '/add-product': (context) => AddProductPage(),
-        '/submit': (context) => SubmitPage(),
+        // Ditambahkan const agar tidak ada warning biru
+        '/login': (context) => const LoginPage(),
+        '/products': (context) => const ProductListPage(),
+        '/add-product': (context) => const AddProductPage(),
+        '/submit': (context) => const SubmitPage(),
       },
     );
   }
