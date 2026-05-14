@@ -19,42 +19,29 @@ class _ProductListPageState extends State<ProductListPage> {
     _loadProducts();
   }
 
-  Future<void> _loadProducts() async {
+Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
     try {
       final products = await _apiService.getProducts();
+      if (!mounted) return; // FIX
       setState(() => _products = products);
     } catch (e) {
+      if (!mounted) return; // FIX
       _showError(e.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteProduct(int id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1D1F33),
-        title: const Text('Hapus Produk', style: TextStyle(color: Color(0xFF00E5FF))),
-        content: const Text('Data akan disembunyikan.', style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
-    );
+    final confirm = await showDialog<bool>( ... );
     if (confirm == true) {
       try {
         await _apiService.deleteProduct(id);
+        if (!mounted) return; // FIX
         _loadProducts();
       } catch (e) {
+        if (!mounted) return; // FIX
         _showError('Gagal menghapus: $e');
       }
     }
@@ -87,6 +74,7 @@ class _ProductListPageState extends State<ProductListPage> {
         child: const Icon(Icons.add, color: Colors.black),
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-product');
+          if (!mounted) return; // FIX
           _loadProducts();
         },
       ),

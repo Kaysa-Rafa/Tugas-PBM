@@ -17,7 +17,10 @@ class Product {
     return Product(
       id: json['id'],
       name: json['name'],
-      price: json['price'] is int ? json['price'] : int.parse(json['price'].toString()),
+      // Menggunakan num.parse().toInt() agar lebih aman menghadapi variasi tipe kembalian backend
+      price: json['price'] is int 
+          ? json['price'] 
+          : num.parse(json['price'].toString()).toInt(),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
     );

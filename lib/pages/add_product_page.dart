@@ -15,7 +15,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final _apiService = ApiService();
   bool _isSaving = false;
 
-  Future<void> _save() async {
+Future<void> _save() async {
     if (_nameCtrl.text.isEmpty || _priceCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -40,15 +40,18 @@ class _AddProductPageState extends State<AddProductPage> {
         price: price,
         description: _descCtrl.text,
       ));
+      
+      if (!mounted) return; // FIX
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return; // FIX
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Gagal: ${e.toString()}'),
             backgroundColor: Colors.redAccent),
       );
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 

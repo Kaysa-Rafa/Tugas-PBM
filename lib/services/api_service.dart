@@ -47,14 +47,29 @@ class ApiService {
     }
   }
 
+  // --- BAGIAN YANG DIPERBAIKI ---
   Future<Product> createProduct(Product product) async {
-    final headers = await _getHeaders();
+    // Ambil token secara manual agar kita bisa mengatur header spesifik untuk fungsi ini
+    final token = await _authService.getToken();
     final url = Uri.parse('$baseUrl/api/products');
+    
     final response = await http.post(
       url,
-      headers: headers,
-      body: jsonEncode(product.toJson()),
+      headers: {
+        // Kita HAPUS 'Content-Type': 'application/json' untuk request ini
+        // agar dikirim sebagai form-data biasa
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${token ?? ''}',
+      },
+      // Hapus jsonEncode dan kirim sebagai Map biasa.
+      // Pastikan semua value dikonversi ke String
+      body: {
+        'name': product.name,
+        'price': product.price.toString(),
+        'description': product.description,
+      },
     );
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
       return Product.fromJson(data['data']);
@@ -62,6 +77,7 @@ class ApiService {
       throw Exception('Gagal menyimpan produk: ${response.body}');
     }
   }
+  // ------------------------------
 
   Future<void> deleteProduct(int id) async {
     final headers = await _getHeaders();

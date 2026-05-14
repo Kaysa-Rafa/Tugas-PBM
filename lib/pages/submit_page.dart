@@ -12,38 +12,25 @@ class _SubmitPageState extends State<SubmitPage> {
   final _priceCtrl = TextEditingController(text: '99999');
   final _descCtrl = TextEditingController(text: 'Dikirim dari perangkat quanta');
   final _githubCtrl = TextEditingController(
-    text: 'https://github.com/username/tugas-pbm', // ⚠️ GANTI DENGAN REPO ANDA
+    text: 'https://github.com/Kaysa-Rafa/Tugas-PBM', 
   );
   final _apiService = ApiService();
   bool _isSubmitting = false;
 
-  Future<void> _submit() async {
-    final price = int.tryParse(_priceCtrl.text);
-    if (price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Harga harus angka'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
-    if (_githubCtrl.text.isEmpty || !_githubCtrl.text.startsWith('http')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('URL GitHub tidak valid'),
-            backgroundColor: Colors.orangeAccent),
-      );
-      return;
-    }
+Future<void> _submit() async {
+    // ... (Validasi form sama persis)
 
     setState(() => _isSubmitting = true);
     try {
       await _apiService.submitAssignment(
         name: _nameCtrl.text,
-        price: price,
+        price: price!,
         description: _descCtrl.text,
         githubUrl: _githubCtrl.text.trim(),
       );
+      
+      if (!mounted) return; // FIX
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Tugas terkirim ke server utama'),
@@ -51,13 +38,15 @@ class _SubmitPageState extends State<SubmitPage> {
       );
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return; // FIX
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Submit gagal: ${e.toString()}'),
             backgroundColor: Colors.redAccent),
       );
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

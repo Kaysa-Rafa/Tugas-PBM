@@ -20,9 +20,14 @@ class _LoginPageState extends State<LoginPage> {
         _nimController.text.trim(),
         _passController.text.trim(),
       );
+      
+      // FIX: Cek if mounted setelah await
+      if (!mounted) return;
+      
       // Navigasi ke halaman produk setelah login berhasil
       Navigator.pushReplacementNamed(context, '/products');
     } catch (e) {
+      if (!mounted) return; // FIX: Cek if mounted setelah await
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceFirst('Exception: ', '')),
@@ -30,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
