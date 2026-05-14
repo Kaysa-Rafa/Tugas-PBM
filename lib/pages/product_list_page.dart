@@ -1,11 +1,12 @@
-// lib/pages/product_list_page.dart
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
 
 class ProductListPage extends StatefulWidget {
+  const ProductListPage({super.key});
+
   @override
-  _ProductListPageState createState() => _ProductListPageState();
+  State<ProductListPage> createState() => _ProductListPageState();
 }
 
 class _ProductListPageState extends State<ProductListPage> {
@@ -13,6 +14,12 @@ class _ProductListPageState extends State<ProductListPage> {
   List<Product> _products = [];
   bool _isLoading = true;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
 
   Future<void> _loadProducts() async {
     setState(() {
@@ -41,18 +48,18 @@ class _ProductListPageState extends State<ProductListPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Color(0xFF1D1F33),
-        title: Text('Konfirmasi', style: TextStyle(color: Color(0xFF00E5FF))),
+        backgroundColor: const Color(0xFF1D1F33),
+        title: const Text('Konfirmasi', style: TextStyle(color: Color(0xFF00E5FF))),
         content: Text('Hapus produk "${product.name}"?',
-            style: TextStyle(color: Colors.white70)),
+            style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -64,9 +71,9 @@ class _ProductListPageState extends State<ProductListPage> {
       await _apiService.deleteProduct(product.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Produk berhasil dihapus')),
+          const SnackBar(content: Text('Produk berhasil dihapus')),
         );
-        _loadProducts(); // muat ulang daftar
+        _loadProducts(); // refresh
       }
     } catch (e) {
       if (mounted) {
@@ -78,34 +85,28 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Katalog Produk'),
+        title: const Text('Katalog Produk'),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: Color(0xFF00E5FF)),
+            icon: const Icon(Icons.refresh, color: Color(0xFF00E5FF)),
             onPressed: _loadProducts,
           ),
           IconButton(
-            icon: Icon(Icons.upload_file, color: Color(0xFF00E5FF)),
+            icon: const Icon(Icons.upload_file, color: Color(0xFF00E5FF)),
             onPressed: () => Navigator.pushNamed(context, '/submit'),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Color(0xFF00E5FF),
+        backgroundColor: const Color(0xFF00E5FF),
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-product');
-          _loadProducts(); // refresh setelah menambah produk
+          _loadProducts(); // refresh setelah tambah
         },
-        child: Icon(Icons.add, color: Colors.black),
+        child: const Icon(Icons.add, color: Colors.black),
       ),
       body: _buildBody(),
     );
@@ -113,7 +114,7 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return Center(
+      return const Center(
         child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
       );
     }
@@ -123,13 +124,13 @@ class _ProductListPageState extends State<ProductListPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Terjadi kesalahan', style: TextStyle(color: Colors.redAccent)),
-            SizedBox(height: 8),
-            Text(_errorMessage!, style: TextStyle(color: Colors.white54)),
-            SizedBox(height: 16),
+            const Text('Terjadi kesalahan', style: TextStyle(color: Colors.redAccent)),
+            const SizedBox(height: 8),
+            Text(_errorMessage!, style: const TextStyle(color: Colors.white54)),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadProducts,
-              child: Text('Coba Lagi'),
+              child: const Text('Coba Lagi'),
             ),
           ],
         ),
@@ -137,13 +138,13 @@ class _ProductListPageState extends State<ProductListPage> {
     }
 
     if (_products.isEmpty) {
-      return Center(
+      return const Center(
         child: Text('Belum ada produk', style: TextStyle(color: Colors.white54)),
       );
     }
 
     return RefreshIndicator(
-      color: Color(0xFF00E5FF),
+      color: const Color(0xFF00E5FF),
       onRefresh: _loadProducts,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -158,10 +159,10 @@ class _ProductListPageState extends State<ProductListPage> {
 
   Widget _buildProductCard(Product p) {
     return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      color: Color(0xFF1D1F33),
+      margin: const EdgeInsets.only(bottom: 16),
+      color: const Color(0xFF1D1F33),
       elevation: 4,
-      shadowColor: Color(0xFF00E5FF).withOpacity(0.3),
+      shadowColor: const Color(0xFF00E5FF).withOpacity(0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -174,7 +175,7 @@ class _ProductListPageState extends State<ProductListPage> {
                 Expanded(
                   child: Text(
                     p.name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF00E5FF),
@@ -183,7 +184,7 @@ class _ProductListPageState extends State<ProductListPage> {
                 ),
                 Text(
                   'Rp ${p.price.toStringAsFixed(0)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -191,20 +192,19 @@ class _ProductListPageState extends State<ProductListPage> {
                 ),
               ],
             ),
-            // Perbaikan: cek null dengan aman menggunakan ?.
             if (p.description?.isNotEmpty == true) ...[
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
                 p.description!,
-                style: TextStyle(color: Colors.white70),
+                style: const TextStyle(color: Colors.white70),
               ),
             ],
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(Icons.delete_outline, color: Colors.redAccent),
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                   onPressed: () => _deleteProduct(p),
                   tooltip: 'Hapus produk',
                 ),

@@ -5,26 +5,14 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
 
   Future<void> saveToken(String token) async {
-    try {
-      await _storage.write(key: _tokenKey, value: token);
-    } catch (e) {
-      throw Exception('Gagal menyimpan token: $e');
-    }
+    await _storage.write(key: _tokenKey, value: token);
   }
 
   Future<String?> getToken() async {
-    try {
-      return await _storage.read(key: _tokenKey);
-    } catch (e) {
-      throw Exception('Gagal membaca token: $e');
-    }
+    return await _storage.read(key: _tokenKey);
   }
 
   Future<void> deleteToken() async {
-    try {
-      await _storage.delete(key: _tokenKey);
-    } catch (e) {
-      throw Exception('Gagal menghapus token: $e');
-    }
+    await _storage.delete(key: _tokenKey);
   }
 }

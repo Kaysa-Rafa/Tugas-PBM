@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -43,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage(
+            image: const NetworkImage(
               'https://images.unsplash.com/photo-1515634928627-2a4e0dae3ddf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
             ),
             fit: BoxFit.cover,
@@ -66,80 +68,44 @@ class _LoginPageState extends State<LoginPage> {
                     style: GoogleFonts.orbitron(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF00E5FF),
+                      color: const Color(0xFF00E5FF),
                       shadows: [
                         Shadow(
-                          color: Color(0xFF00E5FF).withOpacity(0.5),
+                          color: const Color(0xFF00E5FF).withOpacity(0.5),
                           blurRadius: 15,
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   TextFormField(
                     controller: _nimController,
                     keyboardType: TextInputType.number,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
                       labelText: 'NIM (Username)',
-                      labelStyle: TextStyle(color: Color(0xFF00E5FF)),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF00E5FF).withOpacity(0.5),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF00E5FF),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'NIM tidak boleh kosong';
-                      }
-                      return null;
-                    },
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'NIM wajib diisi' : null,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
                     keyboardType: TextInputType.number,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
                       labelText: 'Password (NIM)',
-                      labelStyle: TextStyle(color: Color(0xFF00E5FF)),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF00E5FF).withOpacity(0.5),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0xFF00E5FF),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Password tidak boleh kosong';
-                      }
-                      return null;
-                    },
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Password wajib diisi' : null,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   _isLoading
-                      ? CircularProgressIndicator(color: Color(0xFF00E5FF))
+                      ? const CircularProgressIndicator(color: Color(0xFF00E5FF))
                       : ElevatedButton(
                           onPressed: _login,
-                          child: Text('LOGIN'),
+                          child: const Text('LOGIN'),
                         ),
                 ],
               ),

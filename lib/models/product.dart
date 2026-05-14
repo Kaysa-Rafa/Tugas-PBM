@@ -14,25 +14,23 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    // Mengonversi price dengan aman dari berbagai kemungkinan tipe
-    double parsedPrice;
-    final priceValue = json['price'];
+    // Parsing harga yang aman
+    double parsedPrice = 0.0;
+    final priceValue = json['price'] ?? json['harga'];
     if (priceValue is int) {
       parsedPrice = priceValue.toDouble();
     } else if (priceValue is double) {
       parsedPrice = priceValue;
     } else if (priceValue is String) {
       parsedPrice = double.tryParse(priceValue) ?? 0.0;
-    } else {
-      parsedPrice = 0.0; // Fallback jika null atau tipe tidak dikenal
     }
 
     return Product(
       id: json['id'] ?? 0,
-      name: json['name'] ?? 'Tanpa Nama',
+      name: json['name'] ?? json['product_name'] ?? 'Tanpa Nama',
       price: parsedPrice,
-      description: json['description'],
-      createdAt: json['created_at'],
+      description: json['description'] ?? json['desc'],
+      createdAt: json['created_at'] ?? json['createdAt'],
     );
   }
 
@@ -45,7 +43,4 @@ class Product {
       'created_at': createdAt,
     };
   }
-
-  @override
-  String toString() => 'Product(id: $id, name: $name, price: $price)';
 }

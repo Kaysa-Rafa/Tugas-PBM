@@ -6,7 +6,7 @@ import 'pages/add_product_page.dart';
 import 'pages/submit_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Perbaikan: inisialisasi binding
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -22,39 +22,52 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        primaryColor: Color(0xFF00E5FF),
-        scaffoldBackgroundColor: Color(0xFF0A0E21),
-        cardColor: Color(0xFF1D1F33),
+        primaryColor: const Color(0xFF00E5FF),
+        scaffoldBackgroundColor: const Color(0xFF0A0E21),
+        cardColor: const Color(0xFF1D1F33),
         textTheme: textTheme,
         appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF1D1F33),
+          backgroundColor: const Color(0xFF1D1F33),
           titleTextStyle: GoogleFonts.orbitron(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF00E5FF),
+            color: const Color(0xFF00E5FF),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF00E5FF),
+            backgroundColor: const Color(0xFF00E5FF),
             foregroundColor: Colors.black,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
+        inputDecorationTheme: InputDecorationTheme(
+          labelStyle: const TextStyle(color: Color(0xFF00E5FF)),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: const Color(0xFF00E5FF).withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
       initialRoute: '/login',
       routes: {
-        '/login': (context) => LoginPage(),
-        '/products': (context) => ProductListPage(),
-        '/add-product': (context) => AddProductPage(),
-        '/submit': (context) => SubmitPage(),
+        '/login': (context) => const LoginPage(),
+        '/products': (context) => const ProductListPage(),
+        '/add-product': (context) => const AddProductPage(),
+        '/submit': (context) => const SubmitPage(),
       },
-      // Perbaikan: rute fallback jika halaman tidak ditemukan
       onUnknownRoute: (settings) => MaterialPageRoute(
         builder: (context) => Scaffold(
-          body: Center(child: Text('Halaman tidak ditemukan')),
+          body: Center(
+            child: Text('Halaman tidak ditemukan',
+                style: TextStyle(color: Colors.white)),
+          ),
         ),
       ),
     );

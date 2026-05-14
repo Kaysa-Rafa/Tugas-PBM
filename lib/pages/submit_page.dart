@@ -1,10 +1,11 @@
-// lib/pages/submit_page.dart
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
 class SubmitPage extends StatefulWidget {
+  const SubmitPage({super.key});
+
   @override
-  _SubmitPageState createState() => _SubmitPageState();
+  State<SubmitPage> createState() => _SubmitPageState();
 }
 
 class _SubmitPageState extends State<SubmitPage> {
@@ -12,14 +13,12 @@ class _SubmitPageState extends State<SubmitPage> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _descController = TextEditingController();
-  // Inisialisasi controller dengan nilai default langsung
   final _repoController = TextEditingController(
     text: 'https://github.com/Kaysa-Rafa/Tugas-PBM',
   );
   final ApiService _apiService = ApiService();
   bool _isSubmitting = false;
 
-  // Regex untuk validasi URL GitHub
   final _githubUrlRegex = RegExp(
     r'^https?:\/\/github\.com\/[a-zA-Z0-9\-_]+\/[a-zA-Z0-9\-_\.]+$',
   );
@@ -30,8 +29,7 @@ class _SubmitPageState extends State<SubmitPage> {
     setState(() => _isSubmitting = true);
     try {
       final price = double.tryParse(
-            _priceController.text.replaceAll(',', '.'),
-          ) ??
+              _priceController.text.replaceAll(',', '.')) ??
           0;
       await _apiService.submitTask(
         name: _nameController.text.trim(),
@@ -41,7 +39,7 @@ class _SubmitPageState extends State<SubmitPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tugas berhasil disubmit!')),
+          const SnackBar(content: Text('Tugas berhasil disubmit!')),
         );
         Navigator.pop(context);
       }
@@ -57,18 +55,9 @@ class _SubmitPageState extends State<SubmitPage> {
   }
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _priceController.dispose();
-    _descController.dispose();
-    _repoController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Submit Tugas')),
+      appBar: AppBar(title: const Text('Submit Tugas')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -77,15 +66,15 @@ class _SubmitPageState extends State<SubmitPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration('Nama Produk'),
+                decoration: const InputDecoration(labelText: 'Nama Produk'),
                 validator: (v) =>
-                    v!.trim().isEmpty ? 'Nama produk wajib diisi' : null,
+                    (v == null || v.trim().isEmpty) ? 'Nama produk wajib diisi' : null,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: _inputDecoration('Harga'),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Harga'),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Harga wajib diisi';
                   final cleaned = v.replaceAll(',', '.');
@@ -95,19 +84,18 @@ class _SubmitPageState extends State<SubmitPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descController,
-                decoration: _inputDecoration('Deskripsi Produk'),
+                decoration: const InputDecoration(labelText: 'Deskripsi Produk'),
                 maxLines: 3,
                 validator: (v) =>
-                    v!.trim().isEmpty ? 'Deskripsi wajib diisi' : null,
+                    (v == null || v.trim().isEmpty) ? 'Deskripsi wajib diisi' : null,
               ),
-              SizedBox(height: 16),
-              // Field URL GitHub dengan nilai default
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _repoController,
-                decoration: _inputDecoration('URL Repository GitHub'),
+                decoration: const InputDecoration(labelText: 'URL Repository GitHub'),
                 keyboardType: TextInputType.url,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'URL wajib diisi';
@@ -117,12 +105,12 @@ class _SubmitPageState extends State<SubmitPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _isSubmitting
-                  ? CircularProgressIndicator()
+                  ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _submit,
-                      child: Text('SUBMIT'),
+                      child: const Text('SUBMIT'),
                     ),
             ],
           ),
@@ -131,18 +119,12 @@ class _SubmitPageState extends State<SubmitPage> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: Color(0xFF00E5FF)),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Color(0xFF00E5FF).withOpacity(0.5)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Color(0xFF00E5FF), width: 2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    _descController.dispose();
+    _repoController.dispose();
+    super.dispose();
   }
 }

@@ -17,7 +17,7 @@ class ApiService {
     };
   }
 
-  // Login – endpoint: POST /api/auth/login
+  // LOGIN
   Future<bool> login(String username, String password) async {
     try {
       final response = await http.post(
@@ -50,7 +50,7 @@ class ApiService {
     }
   }
 
-  // Mendapatkan daftar produk – parsing fleksibel
+  // GET PRODUCTS (parsing fleksibel)
   Future<List<Product>> getProducts() async {
     try {
       final headers = await _getHeaders();
@@ -61,27 +61,30 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final dynamic decoded = jsonDecode(response.body);
-
         List<dynamic> productList;
 
         if (decoded is List) {
-          // Response langsung berupa array [...]
           productList = decoded;
         } else if (decoded is Map<String, dynamic>) {
-          // Response berupa objek, coba ambil dari kunci 'data' atau 'products'
           if (decoded.containsKey('data') && decoded['data'] is List) {
             productList = decoded['data'];
           } else if (decoded.containsKey('products') && decoded['products'] is List) {
             productList = decoded['products'];
           } else {
-            // Jika tidak ada kunci yang sesuai, anggap kosong atau lempar error
-            throw Exception('Format response produk tidak dikenal');
+            // Cari nilai pertama yang bertipe List
+            final listEntry = decoded.values.firstWhere(
+              (v) => v is List,
+              orElse: () => <dynamic>[],
+            );
+            productList = listEntry;
           }
         } else {
-          throw Exception('Response tidak valid');
+          throw Exception('Format respons tidak dikenali');
         }
 
-        return productList.map((json) => Product.fromJson(json)).toList();
+        return productList
+            .map((json) => Product.fromJson(json as Map<String, dynamic>))
+            .toList();
       } else if (response.statusCode == 401) {
         await _authService.deleteToken();
         throw Exception('Sesi habis, silakan login kembali');
@@ -94,7 +97,7 @@ class ApiService {
     }
   }
 
-  // Menambah produk baru
+  // ADD PRODUCT
   Future<Product> addProduct(Product product) async {
     try {
       final headers = await _getHeaders();
@@ -109,14 +112,12 @@ class ApiService {
         Map<String, dynamic> productData;
 
         if (decoded is Map<String, dynamic>) {
-          // Ambil dari kunci 'data' jika ada, jika tidak gunakan langsung
           productData = (decoded.containsKey('data') && decoded['data'] is Map)
               ? decoded['data']
               : decoded;
         } else {
           throw Exception('Response tambah produk tidak valid');
         }
-
         return Product.fromJson(productData);
       } else if (response.statusCode == 401) {
         await _authService.deleteToken();
@@ -130,7 +131,7 @@ class ApiService {
     }
   }
 
-  // Menghapus produk
+  // DELETE PRODUCT
   Future<void> deleteProduct(int id) async {
     try {
       final headers = await _getHeaders();
@@ -153,7 +154,7 @@ class ApiService {
     }
   }
 
-  // Submit tugas – endpoint: POST /api/products/submit
+  // SUBMIT TUGAS
   Future<void> submitTask({
     required String name,
     required double price,
